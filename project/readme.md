@@ -24,7 +24,7 @@ You will be prompted for your TACC password, followed by a TACC token code.
 
 Open the Duo Mobile app and locate the six-digit code associated with TACC Third Party MFA.
 
-If you have trouble authenticating, visit the [TACC Account Portal](https://accounts.tacc.utexas.edu/?utm_source=chatgpt.com), sign in, and navigate to the multifactor authentication settings. You can unpair and re-pair your authenticator if necessary.
+If you have trouble authenticating, visit the [TACC Account Portal](https://accounts.tacc.utexas.edu/), sign in, and navigate to the multifactor authentication settings. You can unpair and re-pair your authenticator if necessary.
 
 Step 3: Confirm successful login.
 
@@ -53,7 +53,7 @@ TACC provides ANSYS for non-commercial academic research and educational use, bu
 
 Every student who will submit ANSYS jobs must complete this step.
 
-1. Visit [TACC ANSYS Documentation](https://docs.tacc.utexas.edu/software/ansys/?utm_source=chatgpt.com) and follow the link to submit a help desk ticket.
+1. Visit [TACC ANSYS Documentation](https://docs.tacc.utexas.edu/software/ansys/) and follow the link to submit a help desk ticket.
 2. Select Running Jobs or Using TACC Resources.
 3. Select Stampede3 as the system.
 4. Use the following subject and message.
@@ -92,13 +92,7 @@ You will perform the geometry preparation, meshing, and initial Fluent setup loc
 - `input.cas.h5` — case definition and mesh
 - `input.dat.h5` — initialized solution data
 
-Where possible, use the same ANSYS version locally and remotely. TACC lists ANSYS 2025 R2 on Stampede3, so check compatibility with the version used at CMU.&#x20;
-
-[image](https://www.google.com/s2/favicons?domain=https://docs.tacc.utexas.edu\&sz=32)
-
-TACC HPC Documentation
-
-
+Where possible, use the same ANSYS version locally and remotely. TACC lists ANSYS 2025 R2 on Stampede3, so check compatibility with the version used at CMU.
 
 ### B. Prepare a Fluent journal file
 
@@ -155,13 +149,7 @@ ls
 
 You should see all three files.
 
-TACC recommends running simulations from `$SCRATCH` rather than `$HOME` or `$WORK`.&#x20;
-
-[image](https://www.google.com/s2/favicons?domain=https://docs.tacc.utexas.edu\&sz=32)
-
-TACC HPC Documentation
-
-
+TACC recommends running simulations from `$SCRATCH` rather than `$HOME` or `$WORK`.
 
 Include any required boundary-condition profiles, lookup tables, or user-defined functions (UDFs). Windows-compiled UDF libraries cannot be used directly on Stampede3's Linux nodes.
 
@@ -177,13 +165,7 @@ Stampede3 has several CPU configurations:
 | `icx`     | 80             | 256 GB          |
 | `spr`     | 112            | 128 GB HBM      |
 
-For your initial Fluent jobs, I suggest using the `skx` partition, which provides 48 CPU cores per node and sufficient memory for many moderate CFD cases.&#x20;
-
-[image](https://www.google.com/s2/favicons?domain=https://docs.tacc.utexas.edu\&sz=32)
-
-TACC HPC Documentation+1
-
-
+For your initial Fluent jobs, I suggest using the `skx` partition, which provides 48 CPU cores per node and sufficient memory for many moderate CFD cases.
 
 First, check the ANSYS installation:
 
@@ -191,10 +173,21 @@ First, check the ANSYS installation:
 module spider ansys
 module help ansys
 module load ansys
-which fluent
 ```
 
-If the license has been approved, you should be able to access the Fluent executable.
+Loading the module does not put `fluent` on your `PATH`, so `which fluent` will not find it. The Fluent executable is located at:
+
+```
+/home1/apps/ANSYS/2025R2/v252/fluent/bin/fluent
+```
+
+Confirm that it exists:
+
+```
+ls -l /home1/apps/ANSYS/2025R2/v252/fluent/bin/fluent
+```
+
+If the license has been approved, you should be able to launch Fluent using this full path.
 
 Example Slurm script: 16 CPU processes
 
@@ -222,7 +215,9 @@ module load ansys
 
 cd "$SLURM_SUBMIT_DIR"
 
-fluent 3ddp -g -t"${SLURM_NTASKS}" \
+FLUENT=/home1/apps/ANSYS/2025R2/v252/fluent/bin/fluent
+
+"$FLUENT" 3ddp -g -t"${SLURM_NTASKS}" \
     -scheduler_custom_script \
     -i run.jou > "fluent-${SLURM_JOB_ID}.log" 2>&1
 ```
@@ -245,13 +240,7 @@ The Fluent command options have the following meanings:
 | `-scheduler_custom_script` | Use the environment provided by the custom Slurm script       |
 | `-i run.jou`               | Execute the Fluent journal file                               |
 
-ANSYS documents the custom-script option for Slurm jobs. TACC also confirms that ANSYS applications should be launched from a Slurm job without an additional `ibrun` or `mpirun` wrapper.&#x20;
-
-[image](https://www.google.com/s2/favicons?domain=https://ansyshelp.ansys.com\&sz=32)
-
-Ansys Help+1
-
-
+ANSYS documents the custom-script option for Slurm jobs. TACC also confirms that ANSYS applications should be launched from a Slurm job without an additional `ibrun` or `mpirun` wrapper.
 
 Note: This is a starting template, not a validated Fluent launch script for Stampede3. TACC's publicly available ANSYS example uses Mechanical rather than Fluent. If Fluent encounters an MPI, host-allocation, or licensing error, send the log and submission script to TACC support for guidance before changing the launch configuration.
 
@@ -320,13 +309,7 @@ For larger simulations, two Skylake nodes provide 96 CPU cores:
 
 Do not immediately use the maximum available number of processors. Establish that the solver runs correctly, then evaluate whether additional cores improve performance.
 
-Allocation considerations: Stampede3 charges for complete compute nodes, even when only part of a node is used. For the `skx` partition, the current charge is 1 SU per node-hour, with a minimum charge of 15 minutes per job. For example, a four-hour simulation using two `skx` nodes consumes approximately 8 SUs.&#x20;
-
-[image](https://www.google.com/s2/favicons?domain=https://docs.tacc.utexas.edu\&sz=32)
-
-TACC HPC Documentation
-
-
+Allocation considerations: Stampede3 charges for complete compute nodes, even when only part of a node is used. For the `skx` partition, the current charge is 1 SU per node-hour, with a minimum charge of 15 minutes per job. For example, a four-hour simulation using two `skx` nodes consumes approximately 8 SUs.
 
 ### G. Download and analyze the results
 
@@ -351,10 +334,10 @@ Open the results in Fluent through Virtual Andrew or a CMU computer lab workstat
 
 ## (4) Documentation and support
 
-- [Stampede3 User Guide](https://docs.tacc.utexas.edu/hpc/stampede3/?utm_source=chatgpt.com) — account access, file transfers, allocations, and job submission.
-- [TACC ANSYS Documentation](https://docs.tacc.utexas.edu/software/ansys/?utm_source=chatgpt.com) — license access, installation, and batch execution.
-- [ANSYS Fluent Slurm Documentation](https://ansyshelp.ansys.com/public/Views/Secured/corp/v252/en/pdf/Running_Fluent_Using_a_Load_Manager.pdf?utm_source=chatgpt.com) — Fluent launch options and scheduler integration.
-- [ANSYS Learning Forum](https://innovationspace.ansys.com/forum/forums/?utm_source=chatgpt.com) — meshing, solver configuration, convergence, and Fluent errors.
+- [Stampede3 User Guide](https://docs.tacc.utexas.edu/hpc/stampede3/) — account access, file transfers, allocations, and job submission.
+- [TACC ANSYS Documentation](https://docs.tacc.utexas.edu/software/ansys/) — license access, installation, and batch execution.
+- [ANSYS Fluent Slurm Documentation](https://ansyshelp.ansys.com/public/Views/Secured/corp/v252/en/pdf/Running_Fluent_Using_a_Load_Manager.pdf) — Fluent launch options and scheduler integration.
+- [ANSYS Learning Forum](https://innovationspace.ansys.com/forum/forums/) — meshing, solver configuration, convergence, and Fluent errors.
 
 For Stampede3 account, license, allocation, or cluster-related problems, submit a TACC support ticket. For Fluent setup and solver problems, consult the ANSYS documentation or forum.
 
