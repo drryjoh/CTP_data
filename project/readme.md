@@ -4,6 +4,16 @@ We are approaching the final stages of your course projects. Since PSC Bridges-2
 
 Please complete the following steps as soon as possible. Our goal is to ensure that everyone can access Stampede3, obtain an ANSYS license, and run simulations in parallel.
 
+The steps are:
+
+1. Log in to Stampede3.
+2. Request access to ANSYS.
+3. Confirm that you have ANSYS access.
+4. Run a short test case provided by ANSYS, using the submission script below.
+5. Adapt the test script to run your own project case.
+
+Steps 1–4 should take less than half an hour once your license is approved. Do them before working on your own case, so that any access problems surface early.
+
 ## (1) Confirm your Stampede3 access
 
 TACC (Texas Advanced Computing Center) operates several HPC systems, including Stampede3. You should now have access to Stampede3 through your ACCESS allocation.
@@ -71,141 +81,82 @@ Could I please be granted access to the ANSYS Fluent license on Stampede3?
 Thank you,\
 [Your Name]
 
-Submit the request promptly. You will need approved licensing before running Fluent jobs.
+Submit the request promptly. You will need approved licensing before running Fluent jobs. TACC will reply to your ticket when access has been granted.
 
-## (3) Set up and run ANSYS Fluent simulations on Stampede3
+## (3) Confirm that you have ANSYS access
 
-You will perform the geometry preparation, meshing, and initial Fluent setup locally using Virtual Andrew or a CMU computer lab. Only the computationally intensive simulations will run on Stampede3.
-
-### A. Prepare your simulation locally
-
-1\. Import and prepare geometry using SpaceClaim. Open ANSYS Workbench and add a Fluid Flow (Fluent) system. Import your CAD geometry into SpaceClaim, check units, repair gaps, and extract the fluid domain. For external flows, create an enclosure and subtract the solid geometry.
-
-2\. Generate the mesh using ANSYS Meshing. Open the Mesh cell, define named selections for inlets, outlets, and walls, and apply appropriate refinement and boundary-layer inflation. Inspect mesh quality before proceeding.
-
-3\. Configure the simulation in Fluent. Open the Setup cell and specify the physical models, materials, boundary conditions, numerical methods, and convergence monitors.
-
-4\. Initialize and test locally. Run approximately 5–10 iterations to ensure the case initializes properly and identify any setup errors.
-
-5\. Export your Fluent files. Save the initialized simulation as:
-
-- `input.cas.h5` — case definition and mesh
-- `input.dat.h5` — initialized solution data
-
-Where possible, use the same ANSYS version locally and remotely. TACC lists ANSYS 2025 R2 on Stampede3, so check compatibility with the version used at CMU.
-
-### B. Prepare a Fluent journal file
-
-A journal file tells Fluent what to do automatically when it runs on Stampede3.
-
-Create a plain-text file named `run.jou` containing:
+Log in to Stampede3 (Section 1), then run:
 
 ```
-/file/read-case-data input.cas.h5
-/solve/iterate 500
-/file/write-case-data result.cas.h5
-/exit yes
-```
-
-This script reads your initialized simulation (`input.cas.h5` and `input.dat.h5`), runs 500 iterations, writes the results (`result.cas.h5` and `result.dat.h5`), and exits.
-
-For your first test on Stampede3, change `500` to `10`.
-
-For transient simulations, replace the `/solve/iterate` line with:
-
-```
-/solve/dual-time-iterate 100 30
-```
-
-This requests 100 time steps with up to 30 inner iterations per step. Set the time-step size in Fluent beforehand.
-
-Important: Test the journal file locally before transferring it. Set periodic autosaving for longer production simulations, and use a new output filename when restarting calculations to avoid overwriting earlier results.
-
-### C. Transfer your files to Stampede3
-
-From a terminal on your local computer, upload your Fluent case, data, and journal files:
-
-```
-scp input.cas.h5 input.dat.h5 run.jou \
-YOUR_TACC_USERNAME@stampede3.tacc.utexas.edu:~/
-```
-
-This places the files in your Stampede3 home directory. Next, connect to Stampede3:
-
-```
-ssh YOUR_TACC_USERNAME@stampede3.tacc.utexas.edu
-```
-
-Create a project directory in your scratch space and move the files into it:
-
-```
-mkdir -p $SCRATCH/fluent_project
-mv ~/input.cas.h5 ~/input.dat.h5 ~/run.jou \
-   $SCRATCH/fluent_project/
-
-cd $SCRATCH/fluent_project
-ls
-```
-
-You should see all three files.
-
-TACC recommends running simulations from `$SCRATCH` rather than `$HOME` or `$WORK`. Files in `$SCRATCH` that go unused for an extended period may be purged, so download your results when a run finishes.
-
-Upload any additional files your case needs the same way, such as boundary-condition profiles, lookup tables, or user-defined functions (UDFs). Windows-compiled UDF libraries cannot be used directly on Stampede3's Linux nodes; compile UDFs on Stampede3 instead.
-
-### D. Set up your parallel submission script
-
-Stampede3 uses the Slurm scheduler. You must submit computational jobs to Slurm rather than running Fluent directly on the login node.
-
-Stampede3 has several CPU configurations:
-
-| Partition | Cores per node | Memory per node |
-| --------- | -------------- | --------------- |
-| `skx`     | 48             | 192 GB          |
-| `icx`     | 80             | 256 GB          |
-| `spr`     | 112            | 128 GB HBM      |
-
-For your initial Fluent jobs, I suggest using the `skx` partition, which provides 48 CPU cores per node and sufficient memory for many moderate CFD cases.
-
-First, check the ANSYS installation:
-
-```
-module spider ansys
-module help ansys
 module load ansys
+groups
 ```
 
-Loading the module does not put `fluent` on your `PATH`, so `which fluent` will not find it. The Fluent executable is located at:
+`groups` lists the Unix groups your account belongs to. Once your ANSYS license request is approved, the list should include `G-815296`, the group that owns the ANSYS installation, for example:
 
 ```
-/home1/apps/ANSYS/2025R2/v252/fluent/bin/fluent
+G-829645 G-815296
 ```
 
-Confirm that it exists:
+Your other group number will differ. If `G-815296` is missing, your request is probably still pending; wait for TACC to reply to your ticket.
+
+Next, confirm that the Fluent executable is available:
 
 ```
 ls -l /home1/apps/ANSYS/2025R2/v252/fluent/bin/fluent
 ```
 
-If the license has been approved, you should be able to launch Fluent using this full path.
+You should see a line ending in `/home1/apps/ANSYS/2025R2/v252/fluent/bin/fluent`.
 
-#### Example Slurm script (16 CPU processes)
+Note: `module load ansys` does not add `fluent` to your `PATH`, so typing `fluent` or `which fluent` will not find it. Always use the full path above. The scripts in this guide already do.
 
-Create `submit.slurm` in your project directory:
+## (4) Run the ANSYS test case
+
+ANSYS ships a small example case with the Stampede3 installation (the fluid side of an oscillating-plate tutorial, about 3,000 cells). Running it confirms that you can obtain a license, launch Fluent in parallel on a compute node, read a case, iterate, and write results. It takes under a minute and costs at most 0.25 SU.
+
+The test case has no flow on its own, so the solver reports convergence on the first iteration. That is expected; the point is to confirm that everything runs.
+
+### A. Create a test directory and copy the case
+
+On Stampede3, run:
 
 ```
-nano submit.slurm
+mkdir -p $SCRATCH/fluent_test
+cd $SCRATCH/fluent_test
+cp /home1/apps/ANSYS/2025R2/v252/SystemCoupling/examples/oscillating-plate/Fluid/plate_fluid.cas.h5 input.cas.h5
 ```
 
-Paste the following:
+TACC recommends running simulations from `$SCRATCH` rather than `$HOME` or `$WORK`. Files in `$SCRATCH` that go unused for an extended period may be purged, so download results you want to keep.
+
+### B. Create the journal file
+
+A journal file tells Fluent what to do when it runs without a graphical interface. Paste the following block into your terminal as a whole; it creates `run.jou`:
 
 ```
+cat > run.jou <<'EOF'
+/file/read-case input.cas.h5
+/mesh/check
+/solve/initialize/initialize-flow
+/solve/iterate 10
+/file/write-case-data result.cas.h5
+/exit yes
+EOF
+```
+
+This reads the case, checks the mesh, initializes the solution, runs 10 iterations, writes `result.cas.h5` and `result.dat.h5`, and exits.
+
+### C. Create the Slurm submission script
+
+Stampede3 uses the Slurm scheduler. Never run Fluent directly on the login node; always submit it as a job. Paste the following block to create `submit.slurm`:
+
+```
+cat > submit.slurm <<'EOF'
 #!/bin/bash
 #SBATCH --job-name=fluent_test
 #SBATCH --partition=skx
 #SBATCH --nodes=1
 #SBATCH --ntasks=16
-#SBATCH --time=00:30:00
+#SBATCH --time=00:10:00
 #SBATCH --output=slurm-%j.out
 #SBATCH --error=slurm-%j.err
 
@@ -224,107 +175,192 @@ scontrol show hostnames "$SLURM_JOB_NODELIST" > "hosts-${SLURM_JOB_ID}.txt"
     -cnf="hosts-${SLURM_JOB_ID}.txt" \
     -scheduler_custom_script \
     -i run.jou > "fluent-${SLURM_JOB_ID}.log" 2>&1
+EOF
 ```
 
-If you have multiple allocations, add the following line among the `#SBATCH` directives:
+If you belong to more than one ACCESS allocation, add this line among the `#SBATCH` lines, replacing `YOUR_PROJECT_ID` with the project to charge (for example, `TG-PHY260370`):
 
 ```
 #SBATCH --account=YOUR_PROJECT_ID
 ```
 
-Replace `YOUR_PROJECT_ID` with your applicable ACCESS project.
+What the script does:
 
-The Fluent command options have the following meanings:
+| Line                           | Purpose                                                          |
+| ------------------------------ | ---------------------------------------------------------------- |
+| `--partition=skx`              | Skylake nodes: 48 cores and 192 GB of memory per node            |
+| `--nodes`, `--ntasks`          | Number of nodes and total Fluent processes                       |
+| `--time`                       | Maximum run time (hh:mm:ss); the job is stopped when it runs out |
+| `scontrol show hostnames ...`  | Writes the list of assigned nodes to a host file                 |
+| `3ddp`                         | 3D, double-precision solver (use `2ddp` for 2D cases)            |
+| `-g`                           | Run without a graphical interface                                |
+| `-t`                           | Number of parallel Fluent processes (taken from `--ntasks`)      |
+| `-cnf=hosts-<jobid>.txt`       | Tells Fluent which nodes to run on                               |
+| `-scheduler_custom_script`     | Tells Fluent it is being launched from a Slurm script            |
+| `-i run.jou`                   | Runs the journal file                                            |
 
-| Option                     | Purpose                                                       |
-| -------------------------- | ------------------------------------------------------------- |
-| `3ddp`                     | Three-dimensional, double-precision solver; use `2ddp` for 2D |
-| `-g`                       | Run without a graphical interface                             |
-| `-t`                       | Specify the number of parallel solver processes               |
-| `-cnf=hosts-<jobid>.txt`   | List of compute nodes Fluent should run on (from Slurm)       |
-| `-scheduler_custom_script` | Use the environment provided by the custom Slurm script       |
-| `-i run.jou`               | Execute the Fluent journal file                               |
+Do not wrap the Fluent command in `ibrun` or `mpirun`; Fluent starts its own MPI processes.
 
-ANSYS documents the custom-script option for Slurm jobs. TACC also confirms that ANSYS applications should be launched from a Slurm job without an additional `ibrun` or `mpirun` wrapper.
-
-Note: This is a starting template, not a validated Fluent launch script for Stampede3. TACC's publicly available ANSYS example uses Mechanical rather than Fluent. If Fluent encounters an MPI, host-allocation, or licensing error, send the log and submission script to TACC support for guidance before changing the launch configuration.
-
-### E. Submit a short test
-
-From your Stampede3 project directory:
+### D. Submit the job
 
 ```
 sbatch submit.slurm
 ```
 
-Slurm will return a job ID, for example:
+Slurm prints a series of checks and ends with your job ID:
 
 ```
-Submitted batch job 1234567
+--> Checking available allocation (TG-PHY260370)...OK
+...
+Submitted batch job 3699109
 ```
 
-Check the job status:
+Your job ID will differ. Use it in place of `3699109` below.
+
+### E. Check the job
+
+While the job is waiting or running:
 
 ```
 squeue -u $USER
 ```
 
-Inspect the Fluent log:
+Once it no longer appears in `squeue`, check how it ended:
 
 ```
-tail -f fluent-1234567.log
+sacct -j 3699109 -o JobID,State,Elapsed,ExitCode
 ```
 
-Replace `1234567` with your actual job ID. If the Fluent log is missing or empty, check `slurm-1234567.out` and `slurm-1234567.err` for errors from Slurm or the module system.
+A successful run shows `COMPLETED` and exit code `0:0`.
 
-Press `Ctrl+C` to stop watching the log. This does not stop the simulation.
-
-To cancel a running job:
+To follow the Fluent log while the job runs (press `Ctrl+C` to stop watching; this does not stop the job):
 
 ```
-scancel 1234567
+tail -f fluent-3699109.log
 ```
 
-Because Stampede3 charges for whole nodes, this 16-process test is billed the same as a full 48-core node; it is kept small only to make problems easier to diagnose.
-
-For the initial test, verify that Fluent obtains a license, successfully reads the case, launches its parallel processes, completes 10 iterations, and writes the output files.
-
-### F. Submit your production simulations
-
-Once your test succeeds:
-
-1. Edit `run.jou` and increase the iteration count (for example, back to `500`, or however many your case needs to converge).
-2. If you are rerunning in the same directory, change the output filename in `run.jou` (for example, `result_run2.cas.h5`) so earlier results are not overwritten.
-3. Increase the requested cores and runtime in `submit.slurm`.
-
-For a full 48-core Skylake node, replace the `#SBATCH` lines with:
+To cancel a job:
 
 ```
-#SBATCH --job-name=fluent_production
-#SBATCH --partition=skx
-#SBATCH --nodes=1
-#SBATCH --ntasks=48
-#SBATCH --time=04:00:00
-#SBATCH --output=slurm-%j.out
-#SBATCH --error=slurm-%j.err
+scancel 3699109
 ```
 
-Keep the rest of the script unchanged.
+### F. Confirm that the test succeeded
 
-For larger simulations, two Skylake nodes provide 96 CPU cores. Change the two corresponding lines to:
+List the directory:
 
 ```
-#SBATCH --nodes=2
-#SBATCH --ntasks=96
+ls
 ```
 
-Do not immediately use the maximum available number of processors. Establish that the solver runs correctly, then evaluate whether additional cores improve performance.
+You should see `result.cas.h5` and `result.dat.h5`, along with the log, host file, Slurm output files, and a `fluent-<date>-<time>.trn` transcript that Fluent writes automatically.
 
-Allocation considerations: Stampede3 charges for complete compute nodes, even when only part of a node is used. For the `skx` partition, the current charge is 1 SU per node-hour, with a minimum charge of 15 minutes per job. For example, a four-hour simulation using two `skx` nodes consumes approximately 8 SUs.
+Then check the log for the key steps:
 
-### G. Download and analyze the results
+```
+grep -E "License Server|Host spawning|Writing to|Total Transcript" fluent-3699109.log
+```
 
-After the simulation finishes, download both result files to your local machine.
+A successful run includes lines like:
+
+```
+Connected License Server List:  1055@license03.tacc.utexas.edu
+Host spawning Node 0 on machine "c479-024.stampede3.tacc.utexas.edu" (unix).
+Writing to c479-024...:"/scratch/.../fluent_test/result.cas.h5" in NODE0 mode ...
+Writing to c479-024...:"/scratch/.../fluent_test/result.dat.h5" in NODE0 mode ...
+Total Transcript Time: 0 Minute 24 Second.
+```
+
+A warning such as `reading 4 partition grid onto 16 compute node machine` is normal; Fluent repartitions the mesh automatically.
+
+If the run fails:
+
+- A license error in `fluent-<jobid>.log` means your ANSYS access has not been approved yet (Section 2).
+- If the Fluent log is missing or empty, check `slurm-<jobid>.out` and `slurm-<jobid>.err` for errors from Slurm or the module system.
+- For anything else, open a TACC support ticket and attach `submit.slurm`, `run.jou`, and the log files.
+
+Once this test succeeds, you are ready to run your own case.
+
+## (5) Run your own case
+
+Prepare your geometry, mesh, and Fluent setup locally using Virtual Andrew or a CMU computer lab. Only the computationally intensive solve runs on Stampede3.
+
+### A. Prepare your case locally
+
+1. **Geometry (SpaceClaim).** In ANSYS Workbench, add a Fluid Flow (Fluent) system. Import your CAD geometry into SpaceClaim, check units, repair gaps, and extract the fluid domain. For external flows, create an enclosure and subtract the solid geometry.
+2. **Mesh (ANSYS Meshing).** Define named selections for inlets, outlets, and walls, and apply appropriate refinement and boundary-layer inflation. Inspect mesh quality before proceeding.
+3. **Setup (Fluent).** Specify the physical models, materials, boundary conditions, numerical methods, and convergence monitors.
+4. **Test locally.** Initialize and run 5–10 iterations to catch setup errors.
+5. **Export.** Save the initialized simulation as `input.cas.h5` (case and mesh) and `input.dat.h5` (initialized solution).
+
+Stampede3 runs ANSYS 2025 R2. Where possible, use the same version locally, or check that your local version's files can be read by 2025 R2.
+
+### B. Upload your files
+
+From a terminal on your local computer:
+
+```
+scp input.cas.h5 input.dat.h5 YOUR_TACC_USERNAME@stampede3.tacc.utexas.edu:~/
+```
+
+Then, on Stampede3, create a project directory and move the files into it:
+
+```
+mkdir -p $SCRATCH/fluent_project
+mv ~/input.cas.h5 ~/input.dat.h5 $SCRATCH/fluent_project/
+cd $SCRATCH/fluent_project
+```
+
+Upload any additional files your case needs the same way, such as boundary-condition profiles, lookup tables, or user-defined functions (UDFs). Windows-compiled UDF libraries cannot be used on Stampede3's Linux nodes; compile UDFs on Stampede3 instead.
+
+Copy `submit.slurm` from the test directory as a starting point:
+
+```
+cp $SCRATCH/fluent_test/submit.slurm .
+```
+
+### C. What to change from the test case
+
+Start from the test-case `run.jou` and `submit.slurm` and change only the following.
+
+**In `run.jou`:**
+
+| Change                         | Test case                    | Your case                                                                                     |
+| ------------------------------ | ---------------------------- | --------------------------------------------------------------------------------------------- |
+| Read case **and** data         | `/file/read-case input.cas.h5` | `/file/read-case-data input.cas.h5` (also reads `input.dat.h5`)                             |
+| Mesh check and initialization  | `/mesh/check` and `/solve/initialize/initialize-flow` | Remove both; your case was already initialized locally                 |
+| Number of iterations           | `/solve/iterate 10`          | Keep `10` for your first run, then increase (for example, `500`) once it works                |
+| Transient cases                | —                            | Replace `/solve/iterate` with `/solve/dual-time-iterate 100 30` (100 time steps, up to 30 inner iterations each); set the time-step size in Fluent beforehand |
+| Output filename                | `result.cas.h5`              | Use a new name for each run (for example, `result_run2.cas.h5`) so earlier results are not overwritten |
+
+For your first run, `run.jou` should look like:
+
+```
+/file/read-case-data input.cas.h5
+/solve/iterate 10
+/file/write-case-data result.cas.h5
+/exit yes
+```
+
+For long runs, set up periodic autosaving in Fluent before exporting your case, so a run that hits its time limit still leaves usable results.
+
+**In `submit.slurm`:**
+
+| Change              | Test case                  | Your case                                                                     |
+| ------------------- | -------------------------- | ----------------------------------------------------------------------------- |
+| Job name            | `--job-name=fluent_test`   | Any name, for example `--job-name=fluent_project`                             |
+| Solver              | `3ddp`                     | `3ddp` for 3D cases, `2ddp` for 2D cases                                      |
+| Cores               | `--ntasks=16`              | `--ntasks=48` for a full `skx` node                                           |
+| Nodes               | `--nodes=1`                | Keep `1` unless your case is large; `--nodes=2` with `--ntasks=96` for two nodes |
+| Run time            | `--time=00:10:00`          | Long enough for your run, for example `--time=04:00:00`                       |
+
+Everything else in the script stays the same.
+
+Do not jump straight to the largest job. First run your case for 10 iterations on one node, exactly like the test. Once that works, increase the iterations and run time. Only move to two nodes if one node is too slow, and check that the extra cores actually make it faster.
+
+**Allocation cost.** Stampede3 charges for whole nodes, even if you use fewer cores, at 1 SU per node-hour on `skx`, with a 15-minute minimum per job. For example, a four-hour run on two `skx` nodes uses about 8 SUs. The allocation is shared by the whole class, so check your runs before scaling up.
+
+### D. Download and analyze your results
 
 `$SCRATCH` is only defined on Stampede3, so first find the full path of your scratch directory. On Stampede3, run:
 
@@ -332,23 +368,21 @@ After the simulation finishes, download both result files to your local machine.
 echo $SCRATCH
 ```
 
-This prints a path such as `/scratch/01234/YOUR_TACC_USERNAME`. Then, from a terminal on your local computer, download the files using that path:
+This prints a path such as `/scratch/01234/YOUR_TACC_USERNAME`. Then, from a terminal on your local computer, download both result files using that path:
 
 ```
 scp "YOUR_TACC_USERNAME@stampede3.tacc.utexas.edu:/scratch/01234/YOUR_TACC_USERNAME/fluent_project/result.*.h5" .
 ```
 
-Replace the path with the one printed by `echo $SCRATCH`. This copies both `result.cas.h5` and `result.dat.h5` into your current local directory.
-
 Open the results in Fluent through Virtual Andrew or a CMU computer lab workstation. Check convergence, mass and energy conservation, and the physical quantities of interest.
 
-## (4) Documentation and support
+## (6) Documentation and support
 
 - [Stampede3 User Guide](https://docs.tacc.utexas.edu/hpc/stampede3/) — account access, file transfers, allocations, and job submission.
 - [TACC ANSYS Documentation](https://docs.tacc.utexas.edu/software/ansys/) — license access, installation, and batch execution.
 - [ANSYS Fluent Slurm Documentation](https://ansyshelp.ansys.com/public/Views/Secured/corp/v252/en/pdf/Running_Fluent_Using_a_Load_Manager.pdf) — Fluent launch options and scheduler integration.
 - [ANSYS Learning Forum](https://innovationspace.ansys.com/forum/forums/) — meshing, solver configuration, convergence, and Fluent errors.
 
-For Stampede3 account, license, allocation, or cluster-related problems, submit a TACC support ticket. For Fluent setup and solver problems, consult the ANSYS documentation or forum.
+For Stampede3 account, license, allocation, or cluster problems, submit a TACC support ticket. For Fluent setup and solver problems, consult the ANSYS documentation or forum.
 
-Your immediate priorities are to confirm Stampede3 access, submit the ANSYS license request, and prepare your local Fluent simulations. Once license access is granted, each group should submit a small parallel test before beginning its production calculations.
+Your immediate priorities: log in to Stampede3, submit the ANSYS license request, and run the test case in Section 4 as soon as your license is approved.
