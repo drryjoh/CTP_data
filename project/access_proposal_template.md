@@ -14,7 +14,7 @@ When you request an Explore project, ACCESS asks for:
 | Supporting grant | None; this is a course project (Section 4) |
 | Summary of planned work | Section 5 below (paste into the request form) |
 | CV or résumé of the PI (and any co-PIs) | One-page PDF résumé from the submitting team member |
-| Advisor letter (graduate-student PI) | Signed letter from the course instructor on CMU letterhead, provided by the instructor; send them your PI's name and project title |
+| Advisor letter (graduate-student PI) | Signed letter from the course instructor on CMU letterhead, provided by Professor Ryan Johnson; email him your PI's name and project title |
 
 ---
 
@@ -34,11 +34,11 @@ Mechanical Engineering (or Fluid, Particulate, and Hydraulic Systems)
 
 ## 4. Supporting grant
 
-None. This work is a graduate course project in [Course Number and Name], Department of Mechanical Engineering, Carnegie Mellon University, taught by [Instructor Name], Fall 2026.
+None. This work is a graduate course project in 24-618 Computational Analysis of Transport Phenomena, Department of Mechanical Engineering, Carnegie Mellon University, taught by Professor Ryan Johnson, Fall 2026.
 
 ## 5. Summary of planned work
 
-**Objectives.** Our team of [number] graduate students in Mechanical Engineering at Carnegie Mellon University will use computational fluid dynamics (CFD) to study [one-sentence description of the flow problem, e.g. "the aerodynamic forces on a rear wing operating in ground effect"]. The goal is to [primary objective, e.g. "quantify how lift and drag vary with ride height and angle of attack"] and to [secondary objective, e.g. "assess the sensitivity of the results to mesh resolution and turbulence model"]. This work is the final project for [Course Number and Name] and will be completed by the end of the semester in December 2026.
+**Objectives.** Our team of [number] graduate students in Mechanical Engineering at Carnegie Mellon University will use computational fluid dynamics (CFD) to study [one-sentence description of the flow problem, e.g. "the aerodynamic forces on a rear wing operating in ground effect"]. The goal is to [primary objective, e.g. "quantify how lift and drag vary with ride height and angle of attack"] and to [secondary objective, e.g. "assess the sensitivity of the results to mesh resolution and turbulence model"]. This work is the final project for 24-618 Computational Analysis of Transport Phenomena and will be completed by the end of the semester in December 2026.
 
 **Methods and software.** Geometry and meshing will be prepared on Carnegie Mellon computers using ANSYS SpaceClaim and ANSYS Meshing. The simulations will be solved with ANSYS Fluent 2025 R2, using the academic license provided by TACC on Stampede3. We will solve the [steady / transient] Reynolds-averaged Navier–Stokes equations with the [turbulence model, e.g. k–ω SST] turbulence model [add other physics if relevant, e.g. energy equation, species transport]. We will run each case in parallel using Fluent's built-in MPI on Stampede3's Skylake (`skx`) nodes, and download the results for post-processing on our local machines.
 
@@ -63,7 +63,7 @@ This is about [total number] simulations in all.
 
 At 1 SU per node-hour on `skx`, this is about [100] Stampede3 SUs, well within the scope of an Explore allocation. Case and result files are expected to total under [50] GB and will be kept in Stampede3 scratch storage during the project, then copied to Carnegie Mellon storage. No GPUs or large-memory nodes are required.
 
-**Team.** [PI Name] (PI, graduate student), [Team Member 2], [Team Member 3], [Team Member 4]. All team members are Mechanical Engineering graduate students at Carnegie Mellon University and will be added as users on the allocation. The course instructor, [Instructor Name], is supervising the computational work.
+**Team.** [PI Name] (PI, graduate student), [Team Member 2], [Team Member 3], [Team Member 4]. All team members are Mechanical Engineering graduate students at Carnegie Mellon University and will be added as users on the allocation. The course instructor, Professor Ryan Johnson, is supervising the computational work.
 
 ---
 
