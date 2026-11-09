@@ -11,7 +11,7 @@ The steps are:
 3. Confirm that you have ANSYS access.
 4. Run a short test case provided by ANSYS, using the [sample submission script](submit.slurm).
 5. Adapt the test script to run your own project case.
-6. Apply for your own ACCESS allocation (Section 7). Do this **now**, alongside steps 1–2, because approval takes time.
+6. Apply for an ACCESS allocation for your team (Section 7). One application per team. Do this **now**, alongside steps 1–2, because approval takes time.
 
 You do not have ANSYS access yet. TACC grants it only after you request it (Section 2), so submit that request first. Steps 3 and 4 will not work until TACC approves it.
 
@@ -54,7 +54,7 @@ TG-PHY260370         1109       2027-08-18
 login3.stampede3(1)$
 ```
 
-`TG-PHY260370` is the **class allocation**, which you have been added to so you can get started. Its SUs are shared by everyone in the class and will not cover everyone's production runs, so each of you must also apply for your own ACCESS allocation as soon as possible (Section 7).
+`TG-PHY260370` is the **class allocation**, which you have been added to so you can get started. Its SUs are shared by everyone in the class and will not cover everyone's production runs, so each **team** must also apply for its own ACCESS allocation as soon as possible (Section 7).
 
 Your username and disk details will differ. The important part is that you reach the `login*.stampede3` prompt.
 
@@ -189,13 +189,13 @@ scontrol show hostnames "$SLURM_JOB_NODELIST" > "hosts-${SLURM_JOB_ID}.txt"
     -i run.jou > "fluent-${SLURM_JOB_ID}.log" 2>&1
 ```
 
-While you only have the class allocation, jobs are charged to it automatically. Once you have your own allocation (Section 7), you will belong to two projects. In that case, tell Slurm which to charge by changing the commented-out line in `submit.slurm` from `##SBATCH --account=YOUR_PROJECT_ID` to:
+While you only have the class allocation, jobs are charged to it automatically. Once your team has its own allocation (Section 7), you will belong to two projects. In that case, tell Slurm which to charge by changing the commented-out line in `submit.slurm` from `##SBATCH --account=YOUR_PROJECT_ID` to:
 
 ```
 #SBATCH --account=YOUR_PROJECT_ID
 ```
 
-replacing `YOUR_PROJECT_ID` with your own project ID. Use your own allocation for production runs.
+replacing `YOUR_PROJECT_ID` with your team's project ID. Use your team's allocation for production runs.
 
 What the script does:
 
@@ -366,13 +366,13 @@ For long runs, set up periodic autosaving in Fluent before exporting your case, 
 | Cores               | `--ntasks=16`              | `--ntasks=48` for a full `skx` node                                           |
 | Nodes               | `--nodes=1`                | Keep `1` unless your case is large; `--nodes=2` with `--ntasks=96` for two nodes |
 | Run time            | `--time=00:10:00`          | Long enough for your run, for example `--time=04:00:00`                       |
-| Allocation          | (class allocation)         | `#SBATCH --account=YOUR_PROJECT_ID` once you have your own allocation (Section 7) |
+| Allocation          | (class allocation)         | `#SBATCH --account=YOUR_PROJECT_ID` once your team has its own allocation (Section 7) |
 
 Everything else in the script stays the same.
 
 Do not jump straight to the largest job. First run your case for 10 iterations on one node, exactly like the test. Once that works, increase the iterations and run time. Only move to two nodes if one node is too slow, and check that the extra cores actually make it faster.
 
-**Allocation cost.** Stampede3 charges for whole nodes, even if you use fewer cores, at 1 SU per node-hour on `skx`, with a 15-minute minimum per job. For example, a four-hour run on two `skx` nodes uses about 8 SUs. The class allocation (`TG-PHY260370`) is shared by everyone, so use it only for testing and run production jobs on your own allocation.
+**Allocation cost.** Stampede3 charges for whole nodes, even if you use fewer cores, at 1 SU per node-hour on `skx`, with a 15-minute minimum per job. For example, a four-hour run on two `skx` nodes uses about 8 SUs. The class allocation (`TG-PHY260370`) is shared by everyone, so use it only for testing and run production jobs on your team's allocation.
 
 ### D. Download and analyze your results
 
@@ -399,31 +399,45 @@ Open the results in Fluent through Virtual Andrew or a CMU computer lab workstat
 
 For Stampede3 account, license, allocation, or cluster problems, submit a TACC support ticket. For Fluent setup and solver problems, consult the ANSYS documentation or forum.
 
-## (7) Apply for your own ACCESS allocation
+## (7) Apply for your team's ACCESS allocation
 
-The class allocation is only for getting started and testing. Apply for your own allocation **as soon as possible**; review typically takes a few business days, and you will need the time for your production runs.
+The class allocation is only for getting started and testing. **Each team** should apply for its own allocation **as soon as possible**. Only one application is needed per team. Review typically takes a few business days, and you will need the time for your production runs.
 
-ACCESS allocations are awarded in ACCESS Credits, which you then exchange for time on a specific system (here, Stampede3). An Explore project, the smallest type, is enough for a course project.
+ACCESS allocations are awarded in ACCESS Credits, which you then exchange for time on a specific system (here, Stampede3). An Explore project, the smallest type, is enough for a course project; ACCESS lists graduate student projects among its intended uses (see [ACCESS project types](https://allocations.access-ci.org/project-types)).
 
-1. **Sign in** at [ACCESS Allocations](https://allocations.access-ci.org/) with the same ACCESS ID you use for the class allocation.
-2. **Request a new Explore project.** Choose to request a new project and select an Explore ACCESS project. Provide:
-   - a title, for example "CFD simulation of [your project topic] using ANSYS Fluent";
-   - a short abstract describing your course project and why it needs parallel CFD;
-   - the field of science (for example, Mechanical Engineering or Fluid Dynamics).
+### A. Decide who applies
 
-   ACCESS describes Explore projects as suited to graduate student projects (see [ACCESS project types](https://allocations.access-ci.org/project-types)); an Explore project provides up to 400,000 ACCESS Credits. Graduate students may need a letter from their advisor or instructor; if so, ask me.
-3. **Wait for approval.** ACCESS will email you when the project is approved and give you a project ID (for example, `TG-XXX000000`).
-4. **Exchange credits for Stampede3 time.** In the allocations portal, open your new project, choose to exchange credits, select **TACC Stampede3**, and request the number of SUs you need. The [ACCESS exchange calculator](https://allocations.access-ci.org/exchange_calculator) shows how many Stampede3 SUs your credits buy. Start with enough for testing and a few production runs (for example, 100–200 SUs); you can exchange more of your remaining credits later.
-5. **Confirm on Stampede3.** Once the exchange is processed, your new project appears in the "Project balances" table when you log in.
-6. **Charge your jobs to it.** Uncomment the account line in `submit.slurm` and set it to your project ID (Section 4C):
+Choose one team member to submit the request as **PI**. The other team members are added to the project as users once it is approved.
+
+### B. Prepare the request
+
+Fill in the [ACCESS proposal template](access_proposal_template.md) with your team's project details. It covers everything ACCESS asks for in an Explore request:
+
+- project title, keywords, and field of science;
+- a summary of the planned work, with an estimate of the Stampede3 time you need;
+- supporting grant: none (this is a course project).
+
+You will also need:
+
+- **A CV or résumé for the PI**, as a PDF. A one-page résumé is fine.
+- **An advisor letter.** Because the PI is a graduate student, ACCESS requires a signed letter from an advisor on institutional letterhead. I will provide this letter for each team. Email me the PI's name and your project title, and I will send you a signed PDF to upload.
+
+### C. Submit and set up the allocation
+
+1. **Sign in** at [ACCESS Allocations](https://allocations.access-ci.org/) with the PI's ACCESS ID and select **New Project**, then **Explore ACCESS**. Copy in the details from your completed template and upload the résumé and letter.
+2. **Wait for approval.** ACCESS will email the PI when the project is approved, along with a project ID (for example, `TG-XXX000000`).
+3. **Add your teammates.** In the allocations portal, add each team member to the project as a user, using their ACCESS ID.
+4. **Exchange credits for Stampede3 time.** In the allocations portal, open the project, choose to exchange credits, select **TACC Stampede3**, and request the SUs you estimated in your proposal. The [ACCESS exchange calculator](https://allocations.access-ci.org/exchange_calculator) shows how many Stampede3 SUs your credits buy. You can exchange more of your remaining credits later.
+5. **Confirm on Stampede3.** Once the exchange is processed, the new project appears in the "Project balances" table when each team member logs in.
+6. **Charge your jobs to it.** Uncomment the account line in `submit.slurm` and set it to your team's project ID (Section 4C):
 
    ```
    #SBATCH --account=TG-XXX000000
    ```
 
-Your immediate priorities:
+## Your immediate priorities
 
 1. Log in to Stampede3 (Section 1).
-2. Submit the ANSYS license request to TACC (Section 2).
-3. Apply for your own ACCESS allocation (Section 7).
+2. Submit the ANSYS license request to TACC (Section 2). Every student does this.
+3. As a team, choose a PI, fill in the [proposal template](access_proposal_template.md), and email me for the advisor letter (Section 7). One per team.
 4. Once TACC approves your ANSYS access, run the test case (Section 4).

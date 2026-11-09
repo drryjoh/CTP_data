@@ -8,8 +8,8 @@
 #   --ntasks     48 for a full skx node (96 with --nodes=2)
 #   --time       long enough for your run (hh:mm:ss)
 #   3ddp         use 2ddp for 2D cases
-# Once you have your own ACCESS allocation, uncomment the --account line
-# and replace YOUR_PROJECT_ID with your project (e.g. TG-XXX000000).
+# Once your team has its own ACCESS allocation, uncomment the --account line
+# and replace YOUR_PROJECT_ID with your team's project (e.g. TG-XXX000000).
 
 #SBATCH --job-name=fluent_test
 #SBATCH --partition=skx
