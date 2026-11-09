@@ -14,7 +14,7 @@ When you request an Explore project, ACCESS asks for:
 | Supporting grant | None; this is a course project (Section 4) |
 | Summary of planned work | Section 5 below (paste into the request form) |
 | CV or résumé of the PI (and any co-PIs) | One-page PDF résumé from the submitting team member |
-| Advisor letter (graduate-student PI) | Signed letter from the course instructor on CMU letterhead, provided by Professor Ryan Johnson; email him your PI's name and project title |
+| Advisor letter (graduate-student PI) | Signed letter from the course instructor on CMU letterhead, provided by Professor Ryan Johnson; email Professor Johnson your PI's name and project title |
 
 ---
 
