@@ -1,0 +1,6 @@
+/file/read-case input.cas.h5
+/mesh/check
+/solve/initialize/initialize-flow
+/solve/iterate 10
+/file/write-case-data result.cas.h5
+/exit yes

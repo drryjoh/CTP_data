@@ -9,10 +9,11 @@ The steps are:
 1. Log in to Stampede3.
 2. Request access to ANSYS.
 3. Confirm that you have ANSYS access.
-4. Run a short test case provided by ANSYS, using the submission script below.
+4. Run a short test case provided by ANSYS, using the [sample submission script](submit.slurm).
 5. Adapt the test script to run your own project case.
+6. Apply for your own ACCESS allocation (Section 7). Do this **now**, alongside steps 1–2, because approval takes time.
 
-Steps 1–4 should take less than half an hour once your license is approved. Do them before working on your own case, so that any access problems surface early.
+You do not have ANSYS access yet. TACC grants it only after you request it (Section 2), so submit that request first. Steps 3 and 4 will not work until TACC approves it.
 
 ## (1) Confirm your Stampede3 access
 
@@ -53,7 +54,9 @@ TG-PHY260370         1109       2027-08-18
 login3.stampede3(1)$
 ```
 
-Your username, available SUs, and allocation details will differ. The important part is that you reach the `login*.stampede3` prompt.
+`TG-PHY260370` is the **class allocation**, which you have been added to so you can get started. Its SUs are shared by everyone in the class and will not cover everyone's production runs, so each of you must also apply for your own ACCESS allocation as soon as possible (Section 7).
+
+Your username and disk details will differ. The important part is that you reach the `login*.stampede3` prompt.
 
 If you cannot log in, resolve that issue before continuing.
 
@@ -81,7 +84,7 @@ Could I please be granted access to the ANSYS Fluent license on Stampede3?
 Thank you,\
 [Your Name]
 
-Submit the request promptly. You will need approved licensing before running Fluent jobs. TACC will reply to your ticket when access has been granted.
+Submit the request promptly. You will need approved licensing before running Fluent jobs. TACC will reply to your ticket when access has been granted; until then, Sections 3 and 4 will not work.
 
 ## (3) Confirm that you have ANSYS access
 
@@ -128,29 +131,38 @@ cp /home1/apps/ANSYS/2025R2/v252/SystemCoupling/examples/oscillating-plate/Fluid
 
 TACC recommends running simulations from `$SCRATCH` rather than `$HOME` or `$WORK`. Files in `$SCRATCH` that go unused for an extended period may be purged, so download results you want to keep.
 
-### B. Create the journal file
+### B. Download the journal file and submission script
 
-A journal file tells Fluent what to do when it runs without a graphical interface. Paste the following block into your terminal as a whole; it creates `run.jou`:
+Two files are provided in this repository:
+
+- [`run.jou`](run.jou): the Fluent journal file
+- [`submit.slurm`](submit.slurm): the sample Slurm submission script
+
+Download both directly into your test directory on Stampede3:
 
 ```
-cat > run.jou <<'EOF'
+curl -O https://raw.githubusercontent.com/drryjoh/CTP_data/main/project/run.jou
+curl -O https://raw.githubusercontent.com/drryjoh/CTP_data/main/project/submit.slurm
+```
+
+A journal file tells Fluent what to do when it runs without a graphical interface. `run.jou` contains:
+
+```
 /file/read-case input.cas.h5
 /mesh/check
 /solve/initialize/initialize-flow
 /solve/iterate 10
 /file/write-case-data result.cas.h5
 /exit yes
-EOF
 ```
 
 This reads the case, checks the mesh, initializes the solution, runs 10 iterations, writes `result.cas.h5` and `result.dat.h5`, and exits.
 
-### C. Create the Slurm submission script
+### C. The Slurm submission script
 
-Stampede3 uses the Slurm scheduler. Never run Fluent directly on the login node; always submit it as a job. Paste the following block to create `submit.slurm`:
+Stampede3 uses the Slurm scheduler. Never run Fluent directly on the login node; always submit it as a job. The commands in [`submit.slurm`](submit.slurm) (leaving out its header comments) are:
 
 ```
-cat > submit.slurm <<'EOF'
 #!/bin/bash
 #SBATCH --job-name=fluent_test
 #SBATCH --partition=skx
@@ -175,14 +187,15 @@ scontrol show hostnames "$SLURM_JOB_NODELIST" > "hosts-${SLURM_JOB_ID}.txt"
     -cnf="hosts-${SLURM_JOB_ID}.txt" \
     -scheduler_custom_script \
     -i run.jou > "fluent-${SLURM_JOB_ID}.log" 2>&1
-EOF
 ```
 
-If you belong to more than one ACCESS allocation, add this line among the `#SBATCH` lines, replacing `YOUR_PROJECT_ID` with the project to charge (for example, `TG-PHY260370`):
+While you only have the class allocation, jobs are charged to it automatically. Once you have your own allocation (Section 7), you will belong to two projects. In that case, tell Slurm which to charge by changing the commented-out line in `submit.slurm` from `##SBATCH --account=YOUR_PROJECT_ID` to:
 
 ```
 #SBATCH --account=YOUR_PROJECT_ID
 ```
+
+replacing `YOUR_PROJECT_ID` with your own project ID. Use your own allocation for production runs.
 
 What the script does:
 
@@ -313,10 +326,10 @@ cd $SCRATCH/fluent_project
 
 Upload any additional files your case needs the same way, such as boundary-condition profiles, lookup tables, or user-defined functions (UDFs). Windows-compiled UDF libraries cannot be used on Stampede3's Linux nodes; compile UDFs on Stampede3 instead.
 
-Copy `submit.slurm` from the test directory as a starting point:
+Download the sample [`submit.slurm`](submit.slurm) as a starting point:
 
 ```
-cp $SCRATCH/fluent_test/submit.slurm .
+curl -O https://raw.githubusercontent.com/drryjoh/CTP_data/main/project/submit.slurm
 ```
 
 ### C. What to change from the test case
@@ -353,12 +366,13 @@ For long runs, set up periodic autosaving in Fluent before exporting your case, 
 | Cores               | `--ntasks=16`              | `--ntasks=48` for a full `skx` node                                           |
 | Nodes               | `--nodes=1`                | Keep `1` unless your case is large; `--nodes=2` with `--ntasks=96` for two nodes |
 | Run time            | `--time=00:10:00`          | Long enough for your run, for example `--time=04:00:00`                       |
+| Allocation          | (class allocation)         | `#SBATCH --account=YOUR_PROJECT_ID` once you have your own allocation (Section 7) |
 
 Everything else in the script stays the same.
 
 Do not jump straight to the largest job. First run your case for 10 iterations on one node, exactly like the test. Once that works, increase the iterations and run time. Only move to two nodes if one node is too slow, and check that the extra cores actually make it faster.
 
-**Allocation cost.** Stampede3 charges for whole nodes, even if you use fewer cores, at 1 SU per node-hour on `skx`, with a 15-minute minimum per job. For example, a four-hour run on two `skx` nodes uses about 8 SUs. The allocation is shared by the whole class, so check your runs before scaling up.
+**Allocation cost.** Stampede3 charges for whole nodes, even if you use fewer cores, at 1 SU per node-hour on `skx`, with a 15-minute minimum per job. For example, a four-hour run on two `skx` nodes uses about 8 SUs. The class allocation (`TG-PHY260370`) is shared by everyone, so use it only for testing and run production jobs on your own allocation.
 
 ### D. Download and analyze your results
 
@@ -385,4 +399,31 @@ Open the results in Fluent through Virtual Andrew or a CMU computer lab workstat
 
 For Stampede3 account, license, allocation, or cluster problems, submit a TACC support ticket. For Fluent setup and solver problems, consult the ANSYS documentation or forum.
 
-Your immediate priorities: log in to Stampede3, submit the ANSYS license request, and run the test case in Section 4 as soon as your license is approved.
+## (7) Apply for your own ACCESS allocation
+
+The class allocation is only for getting started and testing. Apply for your own allocation **as soon as possible**; review typically takes a few business days, and you will need the time for your production runs.
+
+ACCESS allocations are awarded in ACCESS Credits, which you then exchange for time on a specific system (here, Stampede3). An Explore project, the smallest type, is enough for a course project.
+
+1. **Sign in** at [ACCESS Allocations](https://allocations.access-ci.org/) with the same ACCESS ID you use for the class allocation.
+2. **Request a new Explore project.** Choose to request a new project and select an Explore ACCESS project. Provide:
+   - a title, for example "CFD simulation of [your project topic] using ANSYS Fluent";
+   - a short abstract describing your course project and why it needs parallel CFD;
+   - the field of science (for example, Mechanical Engineering or Fluid Dynamics).
+
+   ACCESS describes Explore projects as suited to graduate student projects (see [ACCESS project types](https://allocations.access-ci.org/project-types)); an Explore project provides up to 400,000 ACCESS Credits. Graduate students may need a letter from their advisor or instructor; if so, ask me.
+3. **Wait for approval.** ACCESS will email you when the project is approved and give you a project ID (for example, `TG-XXX000000`).
+4. **Exchange credits for Stampede3 time.** In the allocations portal, open your new project, choose to exchange credits, select **TACC Stampede3**, and request the number of SUs you need. The [ACCESS exchange calculator](https://allocations.access-ci.org/exchange_calculator) shows how many Stampede3 SUs your credits buy. Start with enough for testing and a few production runs (for example, 100–200 SUs); you can exchange more of your remaining credits later.
+5. **Confirm on Stampede3.** Once the exchange is processed, your new project appears in the "Project balances" table when you log in.
+6. **Charge your jobs to it.** Uncomment the account line in `submit.slurm` and set it to your project ID (Section 4C):
+
+   ```
+   #SBATCH --account=TG-XXX000000
+   ```
+
+Your immediate priorities:
+
+1. Log in to Stampede3 (Section 1).
+2. Submit the ANSYS license request to TACC (Section 2).
+3. Apply for your own ACCESS allocation (Section 7).
+4. Once TACC approves your ANSYS access, run the test case (Section 4).
